@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedInLunaticLimiter",
+  "version": "1.0.0",
+  "description": "Hides LinkedIn posts containing AI buzzwords",
+  "content_scripts": [
+    {
+      "matches": ["*://www.linkedin.com/feed/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": ["*://www.linkedin.com/*"]
+}
