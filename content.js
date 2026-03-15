@@ -13,7 +13,6 @@
     "mistral"
   ];
 
-  // Compile regex once
   const PATTERNS = WORDS.map(word => new RegExp(`\\b${word}\\b`, "i"));
 
   function normalizeText(text) {
@@ -28,6 +27,35 @@
     return PATTERNS.some(regex => regex.test(normalized));
   }
 
+  // this hides BS rule of three which ai written posts constantly use
+  function containsRepeatedNoStyle(text) {
+    const normalized = normalizeText(text);
+
+    const parts = normalized
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (parts.length < 3) return false;
+
+    let streak = 0;
+
+    for (const part of parts) {
+      if (/^(no|kein|keine|keinen|keinem|keiner)\b/i.test(part)) {
+        streak++;
+        if (streak >= 3) return true;
+      } else {
+        streak = 0;
+      }
+    }
+
+    return false;
+  }
+
+  function shouldHidePost(text) {
+    return containsBlockedWord(text) || containsRepeatedNoStyle(text);
+  }
+
   function getPostText(post) {
     return normalizeText(post.innerText || post.textContent || "");
   }
@@ -40,7 +68,7 @@
 
   function processPost(post) {
     const text = getPostText(post);
-    if (containsBlockedWord(text)) {
+    if (shouldHidePost(text)) {
       hidePost(post);
     }
   }
