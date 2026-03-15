@@ -4,7 +4,9 @@
     "ki",
     "mcp",
     "claude",
+    "claw",
     "openai",
+    "openclaw",
     "chatgpt",
     "bard",
     "gemini",
@@ -13,7 +15,9 @@
     "mistral"
   ];
 
-  const PATTERNS = WORDS.map(word => new RegExp(`\\b${word}\\b`, "i"));
+  const PATTERNS = WORDS.map(
+    word => new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
+  );
 
   function normalizeText(text) {
     return (text || "")
@@ -23,33 +27,16 @@
   }
 
   function containsBlockedWord(text) {
-    const normalized = normalizeText(text);
-    return PATTERNS.some(regex => regex.test(normalized));
+    return PATTERNS.some(regex => regex.test(text || ""));
   }
 
-  // this hides BS rule of three which ai written posts constantly use
   function containsRepeatedNoStyle(text) {
     const normalized = normalizeText(text);
 
-    const parts = normalized
-      .split(/[.!?]+/)
-      .map(s => s.trim())
-      .filter(Boolean);
+    const repeatedPattern =
+      /\b(?:no|kein|keine|keinen|keinem|keiner)\b[\s\S]{0,250}\b(?:no|kein|keine|keinen|keinem|keiner)\b[\s\S]{0,250}\b(?:no|kein|keine|keinen|keinem|keiner)\b/i;
 
-    if (parts.length < 3) return false;
-
-    let streak = 0;
-
-    for (const part of parts) {
-      if (/^(no|kein|keine|keinen|keinem|keiner)\b/i.test(part)) {
-        streak++;
-        if (streak >= 3) return true;
-      } else {
-        streak = 0;
-      }
-    }
-
-    return false;
+    return repeatedPattern.test(normalized);
   }
 
   function shouldHidePost(text) {
@@ -57,7 +44,7 @@
   }
 
   function getPostText(post) {
-    return normalizeText(post.innerText || post.textContent || "");
+    return post.innerText || post.textContent || "";
   }
 
   function hidePost(post) {
